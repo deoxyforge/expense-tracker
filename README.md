@@ -27,7 +27,8 @@ expense-tracker/
 │
 ├── index.html                 # App Layout
 ├── styles.css                 # Custom Styling
-└── app.js                     # State Controller
+├── app.js                     # State Controller
+└── walkthrough.md             # Walkthrough report with visuals
 ```
 
 ## Running Locally
@@ -41,3 +42,19 @@ python -m http.server 8000
 # Using Node.js
 npx serve
 ```
+
+## Visual Walkthrough
+
+Here is the application's main interface and layout:
+
+### 1. Dashboard View (Obsidian Dark Theme)
+The landing view contains interactive Chart.js summaries and reactive financial KPIs.
+![Apex Spend Deployed Dashboard](docs/assets/dashboard_view_1783403073932.png)
+
+### 2. Full Dashboard Overview
+Shows historical transaction grids and category metrics.
+![Apex Spend Extended Scroll View](docs/assets/dashboard_full_view_1783403103094.png)
+
+### 3. Verification Recording
+You can watch the full automated validation run of the application below:
+![Live verification flow recording](docs/assets/live_vercel_verification_1783403003601.webp)

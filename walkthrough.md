@@ -4,9 +4,9 @@ We have successfully built and deployed **Apex Spend**, a premium, high-fidelity
 
 ## Changes Made
 
-1. **Lightweight SPA Architecture**: Designed and built the application in a Single Page Application (SPA) layout under `C:\Users\DEEP\.gemini\antigravity-ide\scratch\expense-tracker`.
-2. **Local Storage Database Layer**: Created a client-side database in `app.js` mapping all transactions, default and custom categories, and budget targets to `localStorage`.
-3. **Glassmorphic Obsidian/Slate Theme**: Implemented a responsive design in `styles.css` utilizing Backdrop Blurs, tailored Indigo-centric HSL schemes, and standard Google Fonts (`Outfit`).
+1. **Lightweight SPA Architecture**: Designed and built the application in a Single Page Application (SPA) layout.
+2. **Local Storage Database Layer**: Created a client-side database mapping all transactions, default and custom categories, and budget targets to `localStorage`.
+3. **Glassmorphic Obsidian/Slate Theme**: Implemented a responsive design utilizing Backdrop Blurs, tailored Indigo-centric HSL schemes, and standard Google Fonts (`Outfit`).
 4. **Interactive Analytics Panels**: Integrated `Chart.js` for monthly income/expense trends and dynamic expense distribution categories.
 5. **Vercel Hosting**: Successfully initialized and deployed the project directly to Vercel production.
 
@@ -27,9 +27,9 @@ The website is live at:
 
 Here is a view of the live dashboard running on Vercel:
 
-![Apex Spend Deployed Dashboard](assets/dashboard_view_1783403073932.png)
+![Apex Spend Deployed Dashboard](docs/assets/dashboard_view_1783403073932.png)
 
-![Apex Spend Extended Scroll View](assets/dashboard_full_view_1783403103094.png)
+![Apex Spend Extended Scroll View](docs/assets/dashboard_full_view_1783403103094.png)
 
 You can watch the full verification recording here:
-![Live verification flow recording](assets/live_vercel_verification_1783403003601.webp)
+![Live verification flow recording](docs/assets/live_vercel_verification_1783403003601.webp)
