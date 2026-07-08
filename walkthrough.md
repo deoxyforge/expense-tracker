@@ -8,7 +8,7 @@ We have successfully built and deployed **Apex Spend**, a premium, high-fidelity
 2. **Local Storage Database Layer**: Created a client-side database mapping all transactions, default and custom categories, and budget targets to `localStorage`.
 3. **Glassmorphic Obsidian/Slate Theme**: Implemented a responsive design utilizing Backdrop Blurs, tailored Indigo-centric HSL schemes, and standard Google Fonts (`Outfit`).
 4. **Interactive Analytics Panels**: Integrated `Chart.js` for monthly income/expense trends and dynamic expense distribution categories.
-5. **Chatbot Assistant Component**: Added a floating financial assistant widget at the bottom right containing quick actions (balance, expenses, budget, help) and a typing simulation to answer natural queries dynamically from local storage state.
+5. **Gemini 2.0 Chatbot Integration**: Integrated the Google Gemini 2.0 Flash API to handle natural language finance queries. Key is stored securely client-side and can be customized in settings. Included an automated fallback to local state rule matching to ensure 100% service reliability (e.g. during API rate limits or quota exceptions).
 6. **Vercel Hosting**: Successfully initialized and deployed the project directly to Vercel production.
 
 ## Deployed Application URL
@@ -23,7 +23,7 @@ The website is live at:
 - **Console Validation**: Verified zero JavaScript runtime exceptions, warnings, or asset load failures.
 - **KPI Metrics Check**: Initial balances (`$3,866.31`), total income (`$4,150.00`), and total expenses (`$283.69`) verified correct.
 - **CRUD Operations**: Successfully tested adding transactions, updating budget thresholds, and verifying dynamic calculation redraws.
-- **Chatbot Validation**: Verified successful toggle opening, unread badge notification, quick action clicks, and correct storage-based query replies.
+- **Gemini Chatbot & Fallback Validation**: Verified live API requests using `gemini-2.0-flash`. Validated that if Google returns `429 Too Many Requests` due to API key rate limiting, the chatbot gracefully falls back to local calculations, correctly presenting balance, monthly expenses, and category food breakdowns.
 
 ### Visual Walkthrough
 
@@ -33,10 +33,11 @@ Here is a view of the live dashboard running on Vercel:
 
 ![Apex Spend Extended Scroll View](docs/assets/dashboard_full_view_1783403103094.png)
 
-Here is the interactive Chatbot Assistant:
+Here is the interactive Chatbot Assistant running with the fallback/API verification state:
 
-![Apex Spend Assistant Chat Window](docs/assets/chatbot_verification_1783404341829.png)
+![Apex Spend Assistant Chat Window](docs/assets/chat_history_1783485642751.png)
 
 You can watch the chatbot verification recording here:
-![Chatbot verification recording](docs/assets/live_chatbot_verification_1783484230698.webp)
+![Chatbot verification recording](docs/assets/live_gemini_2_0_chatbot_verification_1783485325125.webp)
+
 

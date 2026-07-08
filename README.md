@@ -58,11 +58,12 @@ Shows historical transaction grids and category metrics.
 
 ### 3. Chatbot Assistant View
 The floating financial assistant handles natural queries and quick actions.
-![Apex Spend Assistant Chat Window](docs/assets/chatbot_verification_1783404341829.png)
+![Apex Spend Assistant Chat Window](docs/assets/chat_history_1783485642751.png)
 
 ### 4. Verification Recordings
 You can watch the automated validation runs:
 - **General Verification Flow**:
   ![Live verification flow recording](docs/assets/live_vercel_verification_1783403003601.webp)
 - **Chatbot Verification Flow**:
-  ![Chatbot verification recording](docs/assets/live_chatbot_verification_1783484230698.webp)
+  ![Chatbot verification recording](docs/assets/live_gemini_2_0_chatbot_verification_1783485325125.webp)
+
