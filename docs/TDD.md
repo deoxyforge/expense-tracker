@@ -24,7 +24,7 @@ Expense Tracker (Apex Spend) is a high-fidelity single-page web application. Thi
                             v
 +-------------------------------------------------------+
 |                 Google Gemini API                     |
-|  Endpoint: /v1beta/models/gemini-2.0-flash            |
+|  Endpoint: /v1beta/models/gemini-2.5-flash            |
 |  Query Param: ?key=localStorage[gemini_key]           |
 +---------------------------+---------------------------+
                             |
@@ -42,7 +42,7 @@ Expense Tracker (Apex Spend) is a high-fidelity single-page web application. Thi
 
 # 3. AI Chatbot Integration Details
 ## API Details
-- **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`
+- **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`
 - **HTTP Method**: `POST`
 - **Headers**: `Content-Type: application/json`
 

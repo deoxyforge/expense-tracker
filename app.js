@@ -1118,7 +1118,7 @@ async function getAssistantResponseAsync(query) {
     throw new Error("No Gemini API key available");
   }
   
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   
   // Calculate total income and expense
   let totalIncome = 0;
