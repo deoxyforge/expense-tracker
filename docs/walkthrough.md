@@ -33,11 +33,11 @@ Here is a view of the live dashboard running on Vercel:
 
 ![Apex Spend Extended Scroll View](docs/assets/dashboard_full_view_1783403103094.png)
 
-Here is the interactive Chatbot Assistant running with the fallback/API verification state:
+Here is the interactive Chatbot Assistant running with the live Gemini 2.5 API:
 
-![Apex Spend Assistant Chat Window](docs/assets/chat_history_1783485642751.png)
+![Apex Spend Assistant Chat Window](docs/assets/chatbot_verification_1783486338677.png)
 
 You can watch the chatbot verification recording here:
-![Chatbot verification recording](docs/assets/live_gemini_2_0_chatbot_verification_1783485325125.webp)
+![Chatbot verification recording](docs/assets/live_gemini_2_5_chatbot_verification_1783486249565.webp)
 
 
