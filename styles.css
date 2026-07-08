@@ -1791,3 +1791,57 @@ body {
     right: 20px;
   }
 }
+
+/* Chatbot Message Formatting & Readability */
+.chat-msg p {
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+}
+.chat-msg p:last-child {
+  margin-bottom: 0;
+}
+.chat-msg ul.chat-list {
+  margin: 10px 0 10px 18px;
+  padding: 0;
+  list-style-type: disc;
+}
+.chat-msg ul.chat-list li {
+  margin-bottom: 8px; /* Promotes better readability */
+  line-height: 1.5;
+}
+.chat-msg ul.chat-list li:last-child {
+  margin-bottom: 0;
+}
+.chat-msg h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 12px 0 6px 0;
+  color: var(--text-primary);
+}
+
+/* Chatbot UX: Working status and step logs */
+.typing-status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.typing-status-log {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.85;
+}
+.typing-status-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent-indigo);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

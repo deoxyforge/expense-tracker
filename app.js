@@ -1279,40 +1279,135 @@ function addChatMessage(text, sender) {
   const msg = document.createElement("div");
   msg.className = `chat-msg msg-${sender}`;
   
-  // Simple markdown-to-html conversion for bold strings and bullet points
-  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\n• /g, '<br>• ');
-  html = html.replace(/\n/g, '<br>');
+  if (sender === "assistant") {
+    msg.innerHTML = parseMarkdownToHTML(text);
+  } else {
+    // Escape simple tags for user messages to avoid raw HTML injection
+    let escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    msg.innerHTML = `<p>${escaped}</p>`;
+  }
   
-  msg.innerHTML = html;
   messagesDiv.appendChild(msg);
   
   // Scroll to bottom
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// Typing indicators
+// Markdown-to-HTML Parser with list support and margin formatting
+function parseMarkdownToHTML(text) {
+  // Bold formatting: **text** -> <strong>text</strong>
+  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Headers: ###, ##, # -> h3, h2, h1
+  html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+  
+  // Parse lines to detect list structures
+  const lines = html.split('\n');
+  let inList = false;
+  let result = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (!line) continue;
+    
+    // Check if line is a bullet item (starting with -, *, or •)
+    if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ') || line.startsWith('•')) {
+      let content = line;
+      if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ')) {
+        content = line.substring(2).trim();
+      } else if (line.startsWith('•')) {
+        content = line.substring(1).trim();
+      }
+      
+      if (!inList) {
+        result.push('<ul class="chat-list">');
+        inList = true;
+      }
+      result.push(`<li>${content}</li>`);
+    } else {
+      if (inList) {
+        result.push('</ul>');
+        inList = false;
+      }
+      
+      // Preserve header blocks without placing them inside p tags
+      if (line.startsWith('<h3') || line.startsWith('<h2') || line.startsWith('<h1')) {
+        result.push(line);
+      } else {
+        result.push(`<p>${line}</p>`);
+      }
+    }
+  }
+  
+  if (inList) {
+    result.push('</ul>');
+  }
+  
+  return result.join('');
+}
+
+// Typing indicators with dynamic steps showing AI's background work
 function showTypingIndicator() {
   const messagesDiv = document.getElementById("chat-messages");
   const indicator = document.createElement("div");
   const id = "typing_" + Date.now();
   indicator.id = id;
   indicator.className = "chat-msg msg-assistant";
+  
   indicator.innerHTML = `
-    <div class="typing-dots">
-      <span></span>
-      <span></span>
-      <span></span>
+    <div class="typing-status">
+      <div class="typing-status-log" id="${id}_step">
+        <span class="typing-status-spinner"></span>
+        <span class="step-text">Reading transaction history...</span>
+      </div>
+      <div class="typing-dots" style="margin-top: 4px;">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
   `;
   messagesDiv.appendChild(indicator);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  // Dynamic logging steps
+  const steps = [
+    "Reading transaction history...",
+    "Analyzing monthly balance & category distribution...",
+    "Sending database context to Gemini 2.5 Flash...",
+    "Formulating financial advice..."
+  ];
+  let currentStep = 0;
+  
+  const intervalId = setInterval(() => {
+    currentStep++;
+    if (currentStep < steps.length) {
+      const el = document.getElementById(`${id}_step`);
+      if (el) {
+        el.querySelector(".step-text").innerText = steps[currentStep];
+      }
+    } else {
+      clearInterval(intervalId);
+    }
+  }, 500);
+  
+  indicator.dataset.intervalId = intervalId;
   return id;
 }
 
 function removeTypingIndicator(id) {
   const el = document.getElementById(id);
-  if (el) el.remove();
+  if (el) {
+    if (el.dataset.intervalId) {
+      clearInterval(parseInt(el.dataset.intervalId));
+    }
+    el.remove();
+  }
 }
 
 // Simple rule-based chatbot query replies
