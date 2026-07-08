@@ -1,127 +1,97 @@
 # Expense Tracker App - Technical Design Document (TDD)
 
 **Project Name:** Expense Tracker  
-**Version:** 1.0  
-**Document Type:** Technical Design Document (SPA Website Version)
+**Version:** 1.1  
+**Document Type:** Technical Design Document (SPA Website Version with AI Integration)
 
 ---
 
 # 1. Project Overview
-Expense Tracker (Apex Spend) is a high-fidelity single-page web application that allows users to manage personal finances by recording income and expenses, organizing transactions into categories, tracking budgets, and viewing spending analytics.
+Expense Tracker (Apex Spend) is a high-fidelity single-page web application. This document details the client-side AI Integration architecture utilizing the Google Gemini API.
 
 ---
 
-# 2. System Architecture
-The application is built using a lightweight SPA (Single Page Application) frontend that stores state in browser local storage. It does not require a backend API, making it extremely fast and suitable for static web hosting.
-
+# 2. System Architecture with Gemini API
 ```plain text
-+---------------------------------------+
-|                Client                 |
-|             (index.html)              |
-|        Framer/Google Fonts/CSS        |
-+-------------------+-------------------+
-                    |
-          Local Data Operations
-                    |
-+-------------------+-------------------+
-|             Controller                |
-|              (app.js)                 |
-|   State Management & Chart.js Engine  |
-+-------------------+-------------------+
-                    |
-           JSON Read / Write
-                    |
-+-------------------+-------------------+
-|         Browser LocalStorage          |
-|        (Key: apex_spend_state)        |
-+---------------------------------------+
++-------------------------------------------------------+
+|                        Client                         |
+|                     (index.html)                      |
+|                  UI Elements & Chat                   |
++---------------------------+---------------------------+
+                            |
+                   HTTPS POST Request
+                            |
+                            v
++-------------------------------------------------------+
+|                 Google Gemini API                     |
+|  Endpoint: /v1beta/models/gemini-1.5-flash            |
+|  Query Param: ?key=localStorage[gemini_key]           |
++---------------------------+---------------------------+
+                            |
+                     JSON Response
+                            |
+                            v
++-------------------------------------------------------+
+|                    Controller                         |
+|                     (app.js)                          |
+|    Parses AI markdown and displays chat bubble        |
++-------------------------------------------------------+
 ```
 
 ---
 
-# 3. Technology Stack
-- **Structure**: Vanilla HTML5
-- **Styling**: Custom Vanilla CSS (Obsidian Dark and Sleek Light modes, flexbox/grid layout, glassmorphic panels)
-- **Logics**: Vanilla JS (ES6+)
-- **Charting**: Chart.js (CDN-delivered, interactive bar and doughnut charts)
-- **Icons**: Lucide Icons (CDN-delivered svg icons)
-- **Deployment**: Vercel Static Hosting
+# 3. AI Chatbot Integration Details
+## API Details
+- **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`
+- **HTTP Method**: `POST`
+- **Headers**: `Content-Type: application/json`
 
----
-
-# 4. Folder Structure
-```plain text
-expense-tracker/
-│
-├── docs/                      # Project Documentation
-│   ├── PRD.md                 # Product Requirements
-│   ├── TDD.md                 # Technical Design
-│   ├── implementation_plan.md # Steps of implementation
-│   └── walkthrough.md         # Final validation details
-│
-├── index.html                 # App Layout & CDN scripts
-├── styles.css                 # Custom Styling System
-└── app.js                     # State Controller & Calculations
-```
-
----
-
-# 5. Data Schema (Local Storage JSON)
-The entire state is stored in a single JSON object under the key `apex_spend_state`:
-
-### Settings
+## Payload Structure
 ```json
 {
-  "name": "String",
-  "currency": "String",
-  "theme": "dark | light"
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "User question here (e.g., 'Am I spending too much on restaurants?')"
+        }
+      ]
+    }
+  ],
+  "systemInstruction": {
+    "parts": [
+      {
+        "text": "System instruction defining persona, rules, and injecting current user data."
+      }
+    ]
+  }
 }
 ```
 
-### Budget
-```json
-{
-  "limit": "Decimal"
-}
-```
+## System Instruction Context
+The controller will construct a system instruction that contains:
+1. **Advisor Persona**: Friendly, concise personal finance assistant.
+2. **Context Injection**: Current date, preferred currency, budget targets, category configurations.
+3. **Transaction Data**: Injected as a structured list:
+   ```json
+   {
+     "budget_limit": 1500,
+     "currency": "$",
+     "current_month_expenses": 296.19,
+     "transactions": [
+       { "title": "Whole Foods Market", "amount": 154.2, "type": "expense", "category": "Food & Dining", "date": "2026-07-02" }
+     ]
+   }
+   ```
+4. **Output Constraints**: Direct responses under 3 sentences where possible. Return answers styled in clean markdown.
 
-### Categories
-```json
-[
-  {
-    "id": "String",
-    "name": "String",
-    "type": "income | expense",
-    "icon": "String",
-    "color": "String"
-  }
-]
-```
-
-### Transactions
-```json
-[
-  {
-    "id": "String",
-    "title": "String",
-    "amount": "Decimal",
-    "type": "income | expense",
-    "categoryId": "String",
-    "date": "String (YYYY-MM-DD)",
-    "method": "Cash | Card | Bank Transfer | Other",
-    "notes": "String"
-  }
-]
-```
+## Key Management & Fallback
+- **Storage**: Key is saved in `localStorage` under `apex_spend_gemini_key` using a secure `<input type="password">` field in Settings.
+- **Fallback Engine**: If `apex_spend_gemini_key` is empty, invalid, or API requests fail, the chatbot falls back to the local keyword-matching rules engine.
 
 ---
 
-# 6. Calculations & Business Logic
-### Balance
-$$\text{Balance} = \sum \text{Income} - \sum \text{Expenses}$$
-
-### Monthly Budget Progress
-$$\text{Progress \%} = \left(\frac{\text{Current Month Expenses}}{\text{Budget Limit}}\right) \times 100$$
-Warnings:
-- Triggered at $\ge 80\%$ (Amber Warning Card)
-- Triggered at $\ge 100\%$ (Red Danger Warning Card)
+# 4. Storage Scheme (Local Storage Keys)
+- `apex_spend_state`: Primary tracker configuration and transaction history.
+- `apex_spend_gemini_key`: User's Google Gemini API key.
