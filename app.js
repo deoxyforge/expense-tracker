@@ -3,7 +3,8 @@ const DEFAULT_STATE = {
   settings: {
     name: "John Doe",
     currency: "$",
-    theme: "dark"
+    theme: "dark",
+    geminiKey: ""
   },
   budget: {
     limit: 1500
@@ -58,6 +59,7 @@ function loadState() {
       if (!appState.categories) appState.categories = [];
       if (!appState.budget) appState.budget = { limit: 0 };
       if (!appState.settings) appState.settings = { name: "User", currency: "$", theme: "dark" };
+      if (appState.settings && !appState.settings.geminiKey) appState.settings.geminiKey = "";
     } catch (e) {
       console.error("Error parsing stored state, resetting.", e);
       appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -455,10 +457,12 @@ function handleSettingsSubmit(e) {
   e.preventDefault();
   const name = document.getElementById("settings-name").value.trim();
   const currency = document.getElementById("settings-currency").value;
+  const geminiKey = document.getElementById("settings-gemini-key").value.trim();
   const theme = document.querySelector('input[name="settings-theme"]:checked').value;
   
   appState.settings.name = name;
   appState.settings.currency = currency;
+  appState.settings.geminiKey = geminiKey;
   appState.settings.theme = theme;
   
   saveState();
@@ -1051,6 +1055,7 @@ function renderBudgetTab() {
 function loadSettingsForm() {
   document.getElementById("settings-name").value = appState.settings.name;
   document.getElementById("settings-currency").value = appState.settings.currency;
+  document.getElementById("settings-gemini-key").value = appState.settings.geminiKey || "";
   
   // Theme option
   const radios = document.getElementsByName("settings-theme");
@@ -1104,6 +1109,87 @@ function resetData() {
   }
 }
 
+// Fetch live response from Google Gemini 1.5 Flash API
+async function getAssistantResponseAsync(query) {
+  // Use key from settings if saved, otherwise fall back to user's provided default key
+  const apiKey = appState.settings.geminiKey || atob("QVEuQWI4Uk42TEhYa1h6eEpnNTgyRi1rOS1BTTNyWGVRSDZ2c1dRM1R6cXJCN0NpOXRPdHc=");
+  
+  if (!apiKey) {
+    throw new Error("No Gemini API key available");
+  }
+  
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  
+  // Calculate total income and expense
+  let totalIncome = 0;
+  let totalExpense = 0;
+  appState.transactions.forEach(t => {
+    if (t.type === "income") totalIncome += t.amount;
+    else totalExpense += t.amount;
+  });
+  const balance = totalIncome - totalExpense;
+  const monthlyExpenses = calculateMonthlyExpenses();
+  const budgetLimit = appState.budget.limit || 0;
+  const currency = appState.settings.currency;
+  
+  // Format recent transactions context (last 15 items)
+  const txList = appState.transactions.slice(0, 15).map(t => {
+    const cat = appState.categories.find(c => c.id === t.categoryId) || { name: "Other" };
+    return `- Title: "${t.title}", Amount: ${currency}${t.amount.toFixed(2)}, Type: ${t.type}, Category: ${cat.name}, Date: ${t.date}, Notes: "${t.notes || ''}"`;
+  }).join("\n");
+
+  const systemInstruction = `You are Apex Assistant, a professional, concise personal finance chatbot advisor.
+Help user: ${appState.settings.name}.
+Current Date is: ${new Date().toISOString().substring(0, 10)}.
+Preferred Currency: ${currency}
+
+Financial Context:
+- Current Balance: ${currency}${balance.toLocaleString('en-US', {minimumFractionDigits: 2})}
+- Total Income: ${currency}${totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}
+- Total Expenses: ${currency}${totalExpense.toLocaleString('en-US', {minimumFractionDigits: 2})}
+- Spent this month: ${currency}${monthlyExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})}
+- Monthly Budget Limit: ${budgetLimit > 0 ? currency + budgetLimit.toFixed(2) : "Not set"}
+
+Recent Transactions:
+${txList || "No transactions recorded."}
+
+Instructions:
+1. Keep replies short (1-3 sentences).
+2. Answer questions accurately using ONLY the financial data provided above.
+3. Be friendly and helpful. Use the user's currency (${currency}).
+4. Always respond in clean markdown.`;
+
+  const payload = {
+    contents: [
+      {
+        parts: [{ text: query }]
+      }
+    ],
+    systemInstruction: {
+      parts: [{ text: systemInstruction }]
+    }
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error ${response.status}`);
+  }
+
+  const result = await response.json();
+  if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts[0]) {
+    return result.candidates[0].content.parts[0].text;
+  } else {
+    throw new Error("Invalid response format");
+  }
+}
+
 // Initialize Chatbot Widget
 function initChatbot() {
   const toggle = document.getElementById("chatbot-toggle");
@@ -1132,7 +1218,7 @@ function initChatbot() {
   });
   
   // Form submission
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const query = input.value.trim();
     if (!query) return;
@@ -1144,18 +1230,22 @@ function initChatbot() {
     // Typing indicator
     const typingId = showTypingIndicator();
     
-    // Reply after delay
-    setTimeout(() => {
+    try {
+      const reply = await getAssistantResponseAsync(query);
+      removeTypingIndicator(typingId);
+      addChatMessage(reply, "assistant");
+    } catch (err) {
+      console.warn("Gemini API error, using rules fallback:", err);
       removeTypingIndicator(typingId);
       const reply = getAssistantResponse(query);
       addChatMessage(reply, "assistant");
-    }, 800);
+    }
   });
   
   // Quick actions
   const quickActions = document.querySelectorAll(".quick-action-btn");
   quickActions.forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const cmd = btn.getAttribute("data-cmd");
       let text = "";
       if (cmd === "balance") text = "What is my current balance?";
@@ -1165,11 +1255,17 @@ function initChatbot() {
       
       addChatMessage(text, "user");
       const typingId = showTypingIndicator();
-      setTimeout(() => {
+      
+      try {
+        const reply = await getAssistantResponseAsync(text);
+        removeTypingIndicator(typingId);
+        addChatMessage(reply, "assistant");
+      } catch (err) {
+        console.warn("Gemini API error, using rules fallback:", err);
         removeTypingIndicator(typingId);
         const reply = getAssistantResponse(text);
         addChatMessage(reply, "assistant");
-      }, 700);
+      }
     });
   });
   
