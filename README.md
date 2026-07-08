@@ -12,6 +12,7 @@ Live website deployed on Vercel:
 - **CHART.JS ANALYTICS**: Grouped bar charts showing Daily Trends and doughnut charts showing Category Distributions.
 - **FULL TRANSACTION FILTERING**: Search matching titles, categories, payment methods, or type instantly.
 - **GLOWING BUDGET TARGET ALERTS**: Configure monthly expense budgets. Turns Amber at 80% usage and Red at 100% with warning banners.
+- **CHATBOT ASSISTANT**: A professional, floating assistant widget helping you ask natural queries about balance, expenses, budget, and savings.
 - **JSON MAINTENANCE**: Export all transaction and profile data to a JSON backup, or import to restore a state.
 
 ## Folder Structure
@@ -55,6 +56,13 @@ The landing view contains interactive Chart.js summaries and reactive financial 
 Shows historical transaction grids and category metrics.
 ![Apex Spend Extended Scroll View](docs/assets/dashboard_full_view_1783403103094.png)
 
-### 3. Verification Recording
-You can watch the full automated validation run of the application below:
-![Live verification flow recording](docs/assets/live_vercel_verification_1783403003601.webp)
+### 3. Chatbot Assistant View
+The floating financial assistant handles natural queries and quick actions.
+![Apex Spend Assistant Chat Window](docs/assets/chatbot_verification_1783404341829.png)
+
+### 4. Verification Recordings
+You can watch the automated validation runs:
+- **General Verification Flow**:
+  ![Live verification flow recording](docs/assets/live_vercel_verification_1783403003601.webp)
+- **Chatbot Verification Flow**:
+  ![Chatbot verification recording](docs/assets/live_chatbot_verification_1783484230698.webp)
