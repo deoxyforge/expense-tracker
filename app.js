@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   setupEventListeners();
   renderApp();
+  initChatbot();
   
   // Set current date in header
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -1101,4 +1102,212 @@ function resetData() {
       window.location.reload();
     }, 1500);
   }
+}
+
+// Initialize Chatbot Widget
+function initChatbot() {
+  const toggle = document.getElementById("chatbot-toggle");
+  const win = document.getElementById("chat-window");
+  const closeBtn = document.getElementById("btn-close-chat");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+  const messagesDiv = document.getElementById("chat-messages");
+  const badge = document.getElementById("chatbot-unread");
+  
+  // Toggle chatbot window open/close
+  toggle.addEventListener("click", () => {
+    const isHidden = win.classList.contains("hidden");
+    if (isHidden) {
+      win.classList.remove("hidden");
+      badge.classList.add("hidden");
+      badge.innerText = "0";
+      input.focus();
+    } else {
+      win.classList.add("hidden");
+    }
+  });
+  
+  closeBtn.addEventListener("click", () => {
+    win.classList.add("hidden");
+  });
+  
+  // Form submission
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const query = input.value.trim();
+    if (!query) return;
+    
+    // User message
+    addChatMessage(query, "user");
+    input.value = "";
+    
+    // Typing indicator
+    const typingId = showTypingIndicator();
+    
+    // Reply after delay
+    setTimeout(() => {
+      removeTypingIndicator(typingId);
+      const reply = getAssistantResponse(query);
+      addChatMessage(reply, "assistant");
+    }, 800);
+  });
+  
+  // Quick actions
+  const quickActions = document.querySelectorAll(".quick-action-btn");
+  quickActions.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const cmd = btn.getAttribute("data-cmd");
+      let text = "";
+      if (cmd === "balance") text = "What is my current balance?";
+      else if (cmd === "expenses") text = "How much did I spend this month?";
+      else if (cmd === "budget") text = "What is my monthly budget?";
+      else if (cmd === "help") text = "Show help menu";
+      
+      addChatMessage(text, "user");
+      const typingId = showTypingIndicator();
+      setTimeout(() => {
+        removeTypingIndicator(typingId);
+        const reply = getAssistantResponse(text);
+        addChatMessage(reply, "assistant");
+      }, 700);
+    });
+  });
+  
+  // Initial Welcome Message
+  addChatMessage(`Hi **${appState.settings.name}**! 👋 I am your Apex Financial Assistant. How can I help you manage your finances today? Try asking about your balance, budgets, or savings.`, "assistant");
+}
+
+// Add Message to Chat Panel
+function addChatMessage(text, sender) {
+  const messagesDiv = document.getElementById("chat-messages");
+  const msg = document.createElement("div");
+  msg.className = `chat-msg msg-${sender}`;
+  
+  // Simple markdown-to-html conversion for bold strings and bullet points
+  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\n• /g, '<br>• ');
+  html = html.replace(/\n/g, '<br>');
+  
+  msg.innerHTML = html;
+  messagesDiv.appendChild(msg);
+  
+  // Scroll to bottom
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Typing indicators
+function showTypingIndicator() {
+  const messagesDiv = document.getElementById("chat-messages");
+  const indicator = document.createElement("div");
+  const id = "typing_" + Date.now();
+  indicator.id = id;
+  indicator.className = "chat-msg msg-assistant";
+  indicator.innerHTML = `
+    <div class="typing-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  `;
+  messagesDiv.appendChild(indicator);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  return id;
+}
+
+function removeTypingIndicator(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// Simple rule-based chatbot query replies
+function getAssistantResponse(query) {
+  const q = query.toLowerCase();
+  const currency = appState.settings.currency;
+  
+  // Calculate total income and expense
+  let totalIncome = 0;
+  let totalExpense = 0;
+  appState.transactions.forEach(t => {
+    if (t.type === "income") totalIncome += t.amount;
+    else totalExpense += t.amount;
+  });
+  const balance = totalIncome - totalExpense;
+  const monthlyExpenses = calculateMonthlyExpenses();
+  const budgetLimit = appState.budget.limit || 0;
+  const remainingBudget = budgetLimit - monthlyExpenses;
+  
+  // 1. Balance Response
+  if (q.includes("balance") || q.includes("net worth") || q.includes("how much money")) {
+    return `Your current balance is **${currency}${balance.toLocaleString('en-US', {minimumFractionDigits: 2})}**. 
+    Total Income: **${currency}${totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}** 
+    Total Expenses: **${currency}${totalExpense.toLocaleString('en-US', {minimumFractionDigits: 2})}**`;
+  }
+  
+  // 2. Expenses Response
+  if (q.includes("expense") || q.includes("spent") || q.includes("spending") || q.includes("outgoings")) {
+    let breakdown = `You have spent **${currency}${monthlyExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})}** this month.`;
+    
+    // Group by category
+    const catSums = {};
+    appState.transactions.forEach(t => {
+      if (t.type === "expense") {
+        catSums[t.categoryId] = (catSums[t.categoryId] || 0) + t.amount;
+      }
+    });
+    
+    const items = [];
+    Object.keys(catSums).forEach(catId => {
+      const cat = appState.categories.find(c => c.id === catId);
+      if (cat) {
+        items.push(`\n• **${cat.name}**: ${currency}${catSums[catId].toFixed(2)}`);
+      }
+    });
+    
+    if (items.length > 0) {
+      breakdown += `\n\n**Breakdown:**` + items.join("");
+    }
+    return breakdown;
+  }
+  
+  // 3. Budget Response
+  if (q.includes("budget") || q.includes("limit")) {
+    if (budgetLimit <= 0) {
+      return `You haven't set up a monthly expense budget yet. Go to the **Budget** tab to set one!`;
+    }
+    const percent = ((monthlyExpenses / budgetLimit) * 100).toFixed(0);
+    return `Your monthly budget is **${currency}${budgetLimit.toLocaleString('en-US', {minimumFractionDigits: 2})}**. 
+    You have spent **${currency}${monthlyExpenses.toFixed(2)}** (${percent}% of limit). 
+    Remaining Budget: **${currency}${remainingBudget.toFixed(2)}** (${remainingBudget < 0 ? 'Exceeded' : 'Healthy'}).`;
+  }
+  
+  // 4. Savings Response
+  if (q.includes("savings") || q.includes("saved") || q.includes("piggy")) {
+    const now = new Date();
+    const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthlyIncome = appState.transactions
+      .filter(t => t.type === "income" && t.date.startsWith(currentMonthPrefix))
+      .reduce((sum, t) => sum + t.amount, 0);
+    const savings = monthlyIncome - monthlyExpenses;
+    
+    return `Your savings for this month (Income - Expenses) is **${currency}${savings.toLocaleString('en-US', {minimumFractionDigits: 2})}**. Keep up the good work!`;
+  }
+  
+  // 5. Help / Menu
+  if (q.includes("help") || q.includes("menu") || q.includes("what can you") || q.includes("commands")) {
+    return `Here are some financial questions you can ask me:
+    • **"What is my current balance?"**
+    • **"How much did I spend this month?"**
+    • **"What is my monthly budget status?"**
+    • **"What are my savings for this month?"**
+    
+    You can also use the quick-action buttons below the chat box!`;
+  }
+  
+  // Greetings
+  if (q.includes("hi") || q.includes("hello") || q.includes("hey") || q.includes("greetings") || q.includes("hola")) {
+    return `Hello! How can I help you check your expenses or balance today?`;
+  }
+  
+  // Default Response
+  return `I'm not sure I understood that. You can ask me about your **balance**, **expenses**, **budget**, or **savings**. Or type **help** to see all options.`;
 }

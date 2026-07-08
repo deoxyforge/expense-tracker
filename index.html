@@ -614,6 +614,49 @@
     </div>
   </div>
 
+  <!-- FLOATING CHATBOT WIDGET -->
+  <div class="chatbot-widget" id="chatbot-widget">
+    <button class="chatbot-toggle" id="chatbot-toggle" title="Open AI Assistant">
+      <i data-lucide="message-square" id="chatbot-icon-opened"></i>
+      <span class="chatbot-badge" id="chatbot-unread">1</span>
+    </button>
+    
+    <div class="chat-window hidden" id="chat-window">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar">
+            <i data-lucide="bot"></i>
+          </div>
+          <div>
+            <h4>Apex Assistant</h4>
+            <span class="chat-status">Online</span>
+          </div>
+        </div>
+        <button class="btn-close-chat" id="btn-close-chat" title="Close Chat">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <div class="chat-messages" id="chat-messages">
+        <!-- Loaded via JS -->
+      </div>
+      
+      <div class="chat-quick-actions" id="chat-quick-actions">
+        <button class="quick-action-btn" data-cmd="balance">Balance</button>
+        <button class="quick-action-btn" data-cmd="expenses">Expenses</button>
+        <button class="quick-action-btn" data-cmd="budget">Budget</button>
+        <button class="quick-action-btn" data-cmd="help">Help</button>
+      </div>
+      
+      <form class="chat-input-area" id="chat-form">
+        <input type="text" id="chat-input" placeholder="Ask about your finances..." autocomplete="off">
+        <button type="submit" class="chat-send-btn" id="chat-send" title="Send Message">
+          <i data-lucide="send"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
